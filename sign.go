@@ -97,14 +97,14 @@ func (ctx *SigningContext) constructSignedInfo(el *etree.Element, enveloped bool
 
 	reference.CreateAttr(URIAttr, "#"+dataId)
 
-	// /SignedInfo/Reference/Transforms
-	transforms := ctx.createNamespacedElement(reference, TransformsTag)
-	if enveloped {
-		envelopedTransform := ctx.createNamespacedElement(transforms, TransformTag)
-		envelopedTransform.CreateAttr(AlgorithmAttr, EnvelopedSignatureAltorithmId.String())
-	}
-	canonicalizationAlgorithm := ctx.createNamespacedElement(transforms, TransformTag)
-	canonicalizationAlgorithm.CreateAttr(AlgorithmAttr, string(ctx.Canonicalizer.Algorithm()))
+	// // /SignedInfo/Reference/Transforms
+	// transforms := ctx.createNamespacedElement(reference, TransformsTag)
+	// if enveloped {
+	// 	envelopedTransform := ctx.createNamespacedElement(transforms, TransformTag)
+	// 	envelopedTransform.CreateAttr(AlgorithmAttr, EnvelopedSignatureAltorithmId.String())
+	// }
+	// canonicalizationAlgorithm := ctx.createNamespacedElement(transforms, TransformTag)
+	// canonicalizationAlgorithm.CreateAttr(AlgorithmAttr, string(ctx.Canonicalizer.Algorithm()))
 
 	// /SignedInfo/Reference/DigestMethod
 	digestMethod := ctx.createNamespacedElement(reference, DigestMethodTag)
@@ -165,6 +165,7 @@ func (ctx *SigningContext) ConstructSignature(el *etree.Element, enveloped bool)
 	if err != nil {
 		return nil, err
 	}
+	detatchedSignedInfo.RemoveAttr("xmlns:xsi")
 
 	digest, err := ctx.digest(detatchedSignedInfo)
 	if err != nil {
