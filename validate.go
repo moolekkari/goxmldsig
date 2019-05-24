@@ -110,9 +110,9 @@ func (ctx *ValidationContext) transform(
 	ref *types.Reference) (*etree.Element, Canonicalizer, error) {
 	transforms := ref.Transforms.Transforms
 
-	if len(transforms) != 2 {
-		return nil, nil, errors.New("Expected Enveloped and C14N transforms")
-	}
+	// if len(transforms) != 2 {
+	// 	return nil, nil, errors.New("Expected Enveloped and C14N transforms")
+	// }
 
 	// map the path to the passed signature relative to the passed root, in
 	// order to enable removal of the signature by an enveloped signature
@@ -298,7 +298,7 @@ func contains(roots []*x509.Certificate, cert *x509.Certificate) bool {
 
 // findSignature searches for a Signature element referencing the passed root element.
 func (ctx *ValidationContext) findSignature(el *etree.Element) (*types.Signature, error) {
-	idAttr := el.SelectAttr(ctx.IdAttribute)
+	idAttr := el.ChildElements()[0].SelectAttr(ctx.IdAttribute)
 	if idAttr == nil || idAttr.Value == "" {
 		return nil, errors.New("Missing ID attribute")
 	}
@@ -463,5 +463,5 @@ func (ctx *ValidationContext) Validate(el *etree.Element) (*etree.Element, error
 		return nil, err
 	}
 
-	return ctx.validateSignature(el, sig, cert)
+	return ctx.validateSignature(el.ChildElements()[0], sig, cert)
 }
