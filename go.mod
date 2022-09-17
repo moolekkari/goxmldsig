@@ -1,4 +1,4 @@
-module josejibin/goxmldsig
+module github.com/josejibin/goxmldsig
 
 go 1.19
 
