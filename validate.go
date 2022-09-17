@@ -331,7 +331,7 @@ func (ctx *ValidationContext) findSignature(el *etree.Element) (*types.Signature
 
 				switch AlgorithmID(c14NAlgorithm) {
 				case CanonicalXML10ExclusiveAlgorithmId:
-					err := etreeutils.TransformExcC14n(detachedSignedInfo, "")
+					err := etreeutils.TransformExcC14n(detachedSignedInfo, "", false)
 					if err != nil {
 						return err
 					}

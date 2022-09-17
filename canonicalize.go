@@ -27,7 +27,7 @@ func MakeC14N10ExclusiveCanonicalizerWithPrefixList(prefixList string) Canonical
 
 // Canonicalize transforms the input Element into a serialized XML document in canonical form.
 func (c *c14N10ExclusiveCanonicalizer) Canonicalize(el *etree.Element) ([]byte, error) {
-	err := etreeutils.TransformExcC14n(el, c.prefixList)
+	err := etreeutils.TransformExcC14n(el, c.prefixList, false)
 	if err != nil {
 		return nil, err
 	}
