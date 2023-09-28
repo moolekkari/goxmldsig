@@ -10,8 +10,8 @@ import (
 	"regexp"
 
 	"github.com/beevik/etree"
-	"github.com/russellhaering/goxmldsig/etreeutils"
-	"github.com/russellhaering/goxmldsig/types"
+	"github.com/moolekkari/goxmldsig/etreeutils"
+	"github.com/moolekkari/goxmldsig/types"
 )
 
 var uriRegexp = regexp.MustCompile("^#[a-zA-Z_][\\w.-]*$")
@@ -107,8 +107,13 @@ func removeElementAtPath(el *etree.Element, path []int) bool {
 func (ctx *ValidationContext) transform(
 	el *etree.Element,
 	sig *types.Signature,
-	ref *types.Reference) (*etree.Element, Canonicalizer, error) {
-	transforms := ref.Transforms.Transforms
+	transform *types.CanonicalizationMethod) (*etree.Element, Canonicalizer, error) {
+	// transforms := []types.Transform{
+	// 	{
+	// 		Algorithm:           sig.SignedInfo.CanonicalizationMethod.Algorithm,
+	// 		InclusiveNamespaces: &types.InclusiveNamespaces{},
+	// 	},
+	// }
 
 	// if len(transforms) != 2 {
 	// 	return nil, nil, errors.New("Expected Enveloped and C14N transforms")
@@ -124,35 +129,33 @@ func (ctx *ValidationContext) transform(
 
 	var canonicalizer Canonicalizer
 
-	for _, transform := range transforms {
-		algo := transform.Algorithm
+	algo := transform.Algorithm
 
-		switch AlgorithmID(algo) {
-		case EnvelopedSignatureAltorithmId:
-			if !removeElementAtPath(el, signaturePath) {
-				return nil, nil, errors.New("Error applying canonicalization transform: Signature not found")
-			}
-
-		case CanonicalXML10ExclusiveAlgorithmId:
-			var prefixList string
-			if transform.InclusiveNamespaces != nil {
-				prefixList = transform.InclusiveNamespaces.PrefixList
-			}
-
-			canonicalizer = MakeC14N10ExclusiveCanonicalizerWithPrefixList(prefixList)
-
-		case CanonicalXML11AlgorithmId:
-			canonicalizer = MakeC14N11Canonicalizer()
-
-		case CanonicalXML10RecAlgorithmId:
-			canonicalizer = MakeC14N10RecCanonicalizer()
-
-		case CanonicalXML10CommentAlgorithmId:
-			canonicalizer = MakeC14N10CommentCanonicalizer()
-
-		default:
-			return nil, nil, errors.New("Unknown Transform Algorithm: " + algo)
+	switch AlgorithmID(algo) {
+	case EnvelopedSignatureAltorithmId:
+		if !removeElementAtPath(el, signaturePath) {
+			return nil, nil, errors.New("Error applying canonicalization transform: Signature not found")
 		}
+
+	case CanonicalXML10ExclusiveAlgorithmId:
+		var prefixList string
+		if transform.InclusiveNamespaces != nil {
+			prefixList = transform.InclusiveNamespaces.PrefixList
+		}
+
+		canonicalizer = MakeC14N10ExclusiveCanonicalizerWithPrefixList(prefixList)
+
+	case CanonicalXML11AlgorithmId:
+		canonicalizer = MakeC14N11Canonicalizer()
+
+	case CanonicalXML10RecAlgorithmId:
+		canonicalizer = MakeC14N10RecCanonicalizer()
+
+	case CanonicalXML10CommentAlgorithmId:
+		canonicalizer = MakeC14N10CommentCanonicalizer()
+
+	default:
+		return nil, nil, errors.New("Unknown Transform Algorithm: " + algo)
 	}
 
 	if canonicalizer == nil {
@@ -249,7 +252,7 @@ func (ctx *ValidationContext) validateSignature(el *etree.Element, sig *types.Si
 
 	// Perform all transformations listed in the 'SignedInfo'
 	// Basically, this means removing the 'SignedInfo'
-	transformed, canonicalizer, err := ctx.transform(el, sig, ref)
+	transformed, canonicalizer, err := ctx.transform(el, sig, &sig.SignedInfo.CanonicalizationMethod)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +334,7 @@ func (ctx *ValidationContext) findSignature(el *etree.Element) (*types.Signature
 
 				switch AlgorithmID(c14NAlgorithm) {
 				case CanonicalXML10ExclusiveAlgorithmId:
-					err := etreeutils.TransformExcC14n(detachedSignedInfo, "", false)
+					err := etreeutils.TransformExcC14n(detachedSignedInfo, "")
 					if err != nil {
 						return err
 					}

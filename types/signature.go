@@ -36,8 +36,9 @@ type Reference struct {
 }
 
 type CanonicalizationMethod struct {
-	XMLName   xml.Name `xml:"http://www.w3.org/2000/09/xmldsig# CanonicalizationMethod"`
-	Algorithm string   `xml:"Algorithm,attr"`
+	XMLName             xml.Name             `xml:"http://www.w3.org/2000/09/xmldsig# CanonicalizationMethod"`
+	Algorithm           string               `xml:"Algorithm,attr"`
+	InclusiveNamespaces *InclusiveNamespaces `xml:"InclusiveNamespaces"`
 }
 
 type SignatureMethod struct {

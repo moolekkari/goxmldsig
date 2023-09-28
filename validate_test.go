@@ -160,9 +160,7 @@ func TestTransform(t *testing.T) {
 	sig, err := vc.findSignature(el)
 	require.NoError(t, err)
 
-	ref := &sig.SignedInfo.References[0]
-
-	transformed, canonicalizer, err := vc.transform(el, sig, ref)
+	transformed, canonicalizer, err := vc.transform(el, sig, &sig.SignedInfo.CanonicalizationMethod)
 	require.NoError(t, err)
 	require.NotEmpty(t, transformed)
 	require.IsType(t, &c14N10ExclusiveCanonicalizer{}, canonicalizer)
