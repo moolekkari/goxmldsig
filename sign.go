@@ -90,21 +90,21 @@ func (ctx *SigningContext) constructSignedInfo(el *etree.Element, enveloped bool
 	// /SignedInfo/Reference
 	reference := ctx.createNamespacedElement(signedInfo, ReferenceTag)
 
-	dataId := el.SelectAttrValue(ctx.IdAttribute, "")
-	if dataId == "" {
-		return nil, errors.New("Missing data ID")
+	uriAttr := el.SelectAttrValue(ctx.IdAttribute, "")
+	if uriAttr != "" {
+		uriAttr = "#" + uriAttr
 	}
 
-	reference.CreateAttr(URIAttr, "#"+dataId)
+	reference.CreateAttr(URIAttr, uriAttr)
 
-	// // /SignedInfo/Reference/Transforms
-	// transforms := ctx.createNamespacedElement(reference, TransformsTag)
-	// if enveloped {
-	// 	envelopedTransform := ctx.createNamespacedElement(transforms, TransformTag)
-	// 	envelopedTransform.CreateAttr(AlgorithmAttr, EnvelopedSignatureAltorithmId.String())
-	// }
-	// canonicalizationAlgorithm := ctx.createNamespacedElement(transforms, TransformTag)
-	// canonicalizationAlgorithm.CreateAttr(AlgorithmAttr, string(ctx.Canonicalizer.Algorithm()))
+	// /SignedInfo/Reference/Transforms
+	transforms := ctx.createNamespacedElement(reference, TransformsTag)
+	if enveloped {
+		envelopedTransform := ctx.createNamespacedElement(transforms, TransformTag)
+		envelopedTransform.CreateAttr(AlgorithmAttr, EnvelopedSignatureAltorithmId.String())
+	}
+	canonicalizationAlgorithm := ctx.createNamespacedElement(transforms, TransformTag)
+	canonicalizationAlgorithm.CreateAttr(AlgorithmAttr, string(ctx.Canonicalizer.Algorithm()))
 
 	// /SignedInfo/Reference/DigestMethod
 	digestMethod := ctx.createNamespacedElement(reference, DigestMethodTag)
@@ -177,7 +177,7 @@ func (ctx *SigningContext) ConstructSignature(el *etree.Element, enveloped bool)
 		return nil, err
 	}
 
-	certs := [][]byte{cert}
+	certs := [][]byte{cert.Raw}
 	if cs, ok := ctx.KeyStore.(X509ChainStore); ok {
 		certs, err = cs.GetChain()
 		if err != nil {

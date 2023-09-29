@@ -4,12 +4,14 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"math/big"
 	"time"
 )
 
 type X509KeyStore interface {
-	GetKeyPair() (privateKey *rsa.PrivateKey, cert []byte, err error)
+	GetKeyPair() (privateKey *rsa.PrivateKey, cert *x509.Certificate, err error)
 }
 
 type X509ChainStore interface {
@@ -33,8 +35,16 @@ type MemoryX509KeyStore struct {
 	cert       []byte
 }
 
-func (ks *MemoryX509KeyStore) GetKeyPair() (*rsa.PrivateKey, []byte, error) {
-	return ks.privateKey, ks.cert, nil
+func (ks *MemoryX509KeyStore) GetKeyPair() (*rsa.PrivateKey, *x509.Certificate, error) {
+	// Parse the PEM-encoded certificate
+	certBlock, _ := pem.Decode(ks.cert)
+	if certBlock == nil {
+		return nil, nil, errors.New("empty cert block")
+	}
+
+	cert, err := x509.ParseCertificate(certBlock.Bytes)
+
+	return ks.privateKey, cert, err
 }
 
 func RandomKeyStoreForTest() X509KeyStore {
